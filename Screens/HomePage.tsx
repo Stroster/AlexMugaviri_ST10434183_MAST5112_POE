@@ -1,5 +1,4 @@
-// HomePage.tsx
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   Button,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { DishesContext, Dish } from './DishesContext';
 
 const HomePage = ({ navigation }: any) => {
@@ -19,6 +19,7 @@ const HomePage = ({ navigation }: any) => {
   }
 
   const { dishes, removeDish } = context;
+  const [selectedCourse, setSelectedCourse] = useState<string>('All');
 
   const handleRemoveDish = (id: number) => {
     Alert.alert(
@@ -36,14 +37,54 @@ const HomePage = ({ navigation }: any) => {
     );
   };
 
+  const filteredDishes =
+    selectedCourse === 'All'
+      ? dishes
+      : dishes.filter((dish) => dish.courseType === selectedCourse);
+
+  const courses = ['Starter', 'Main', 'Side', 'Dessert'];
+
+  // Function to calculate the average price of dishes by course
+  const calculateAveragePriceByCourse = () => {
+    const averages: { [key: string]: number } = {};
+    courses.forEach((course) => {
+      const courseDishes = dishes.filter((dish) => dish.courseType === course);
+      if (courseDishes.length > 0) {
+        const total = courseDishes.reduce(
+          (sum, dish) => sum + parseFloat(dish.dishPrice),
+          0
+        );
+        averages[course] = parseFloat((total / courseDishes.length).toFixed(2));
+      } else {
+        averages[course] = 0;
+      }
+    });
+    return averages;
+  };
+
+  const averagePrices = calculateAveragePriceByCourse();
+
   return (
     <View style={styles.wrapper}>
-      {/* Background Split into Two Colors */}
       <View style={styles.leftSide} />
       <View style={styles.rightSide} />
 
       <ScrollView style={styles.background} contentContainerStyle={styles.container}>
         <Text style={styles.headingText}>Christoffels Restaurant</Text>
+
+        <View style={styles.filterContainer}>
+          <Text style={styles.filterLabel}>Filter by Course:</Text>
+          <Picker
+            selectedValue={selectedCourse}
+            onValueChange={(itemValue) => setSelectedCourse(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="All" value="All" />
+            {courses.map((course) => (
+              <Picker.Item key={course} label={course} value={course} />
+            ))}
+          </Picker>
+        </View> 
 
         <Button
           title="Add to Menu"
@@ -53,7 +94,16 @@ const HomePage = ({ navigation }: any) => {
 
         <Text style={styles.totalItemsText}>Total Menu Items: {dishes.length}</Text>
 
-        {dishes.map((dish: Dish) => (
+        <View style={styles.averagesContainer}>
+          <Text style={styles.averageHeading}>Average Prices by Course:</Text>
+          {courses.map((course) => (
+            <Text key={course} style={styles.averageText}>
+              {course}: R{averagePrices[course]}
+            </Text>
+          ))}
+        </View>
+
+        {filteredDishes.map((dish: Dish) => (
           <View key={dish.id} style={styles.dishContainer}>
             <Text style={styles.courseType}>{dish.courseType}</Text>
             <Text style={styles.dishName}>{dish.dishName}</Text>
@@ -113,7 +163,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginVertical: 15,
     color: 'white',
-    textAlign: 'center',
+    textAlign: 'left',
+  },
+  filterContainer: {
+    marginVertical: 10,
+    paddingHorizontal: 5,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    padding: 10,
+  },
+  filterLabel: {
+    fontSize: 16,
+    color: 'white',
+    marginBottom: 5,
+  },
+  picker: {
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 6,
+  },
+  averagesContainer: {
+    marginVertical: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    padding: 10,
+    borderRadius: 8,
+  },
+  averageHeading: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: 'white',
+  },
+  averageText: {
+    fontSize: 14,
+    color: 'white',
+    marginVertical: 3,
   },
   dishContainer: {
     marginBottom: 15,

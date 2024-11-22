@@ -18,7 +18,7 @@ const MenuPage = ({ navigation }: any) => {
     return null;
   }
 
-  const { addDish } = context;
+  const { addDish, removeDish, dishes } = context;
 
   const [selectedValue, setSelectedValue] = useState<string>('0');
   const [dishName, setDishName] = useState('');
@@ -50,30 +50,10 @@ const MenuPage = ({ navigation }: any) => {
         return;
     }
 
-    if (!dishName.trim()) {
+    if (!dishName.trim() || !dishDescription.trim() || !dishPrice.trim()) {
       Alert.alert(
         'Missing Information',
-        'Please enter the dish name.',
-        [{ text: 'OK' }],
-        { cancelable: false }
-      );
-      return;
-    }
-
-    if (!dishDescription.trim()) {
-      Alert.alert(
-        'Missing Information',
-        'Please describe your dish.',
-        [{ text: 'OK' }],
-        { cancelable: false }
-      );
-      return;
-    }
-
-    if (!dishPrice.trim()) {
-      Alert.alert(
-        'Missing Information',
-        'Please enter the dish price.',
+        'Please fill in all the fields.',
         [{ text: 'OK' }],
         { cancelable: false }
       );
@@ -98,7 +78,6 @@ const MenuPage = ({ navigation }: any) => {
       dishPrice: priceNumber.toFixed(2),
     });
 
-    // Reset input fields
     setSelectedValue('0');
     setDishName('');
     setDishDescription('');
@@ -112,58 +91,38 @@ const MenuPage = ({ navigation }: any) => {
     );
   };
 
+  const handleRemoveDish = (id: number) => {
+    removeDish(id);
+    Alert.alert(
+      'Success',
+      `Dish removed successfully!`,
+      [{ text: 'OK' }],
+      { cancelable: false }
+    );
+  };
+
   return (
     <View style={styles.wrapper}>
-      {/* Background Split into Two Colors */}
       <View style={styles.leftSide} />
       <View style={styles.rightSide} />
 
       <ScrollView style={styles.background} contentContainerStyle={styles.container}>
         <Text style={styles.headingText}>Add New Dish</Text>
 
-        {/* Course Type Selection */}
         <Text style={styles.labelText}>Course Type</Text>
         <View style={styles.radioContainer}>
           <View style={styles.radioGroup}>
-            <View style={styles.radioButton}>
-              <RadioButton.Android
-                value="1"
-                status={selectedValue === '1' ? 'checked' : 'unchecked'}
-                onPress={() => setSelectedValue('1')}
-                color="#007BFF"
-              />
-              <Text style={styles.radioLabel}>Starter</Text>
-            </View>
-
-            <View style={styles.radioButton}>
-              <RadioButton.Android
-                value="2"
-                status={selectedValue === '2' ? 'checked' : 'unchecked'}
-                onPress={() => setSelectedValue('2')}
-                color="#007BFF"
-              />
-              <Text style={styles.radioLabel}>Main</Text>
-            </View>
-
-            <View style={styles.radioButton}>
-              <RadioButton.Android
-                value="3"
-                status={selectedValue === '3' ? 'checked' : 'unchecked'}
-                onPress={() => setSelectedValue('3')}
-                color="#007BFF"
-              />
-              <Text style={styles.radioLabel}>Side</Text>
-            </View>
-
-            <View style={styles.radioButton}>
-              <RadioButton.Android
-                value="4"
-                status={selectedValue === '4' ? 'checked' : 'unchecked'}
-                onPress={() => setSelectedValue('4')}
-                color="#007BFF"
-              />
-              <Text style={styles.radioLabel}>Dessert</Text>
-            </View>
+            {['Starter', 'Main', 'Side', 'Dessert'].map((label, index) => (
+              <View style={styles.radioButton} key={label}>
+                <RadioButton.Android
+                  value={String(index + 1)}
+                  status={selectedValue === String(index + 1) ? 'checked' : 'unchecked'}
+                  onPress={() => setSelectedValue(String(index + 1))}
+                  color="#007BFF"
+                />
+                <Text style={styles.radioLabel}>{label}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -172,7 +131,7 @@ const MenuPage = ({ navigation }: any) => {
           style={styles.textInput}
           placeholder="Enter dish name"
           placeholderTextColor="#666"
-          onChangeText={(newText) => setDishName(newText)}
+          onChangeText={setDishName}
           value={dishName}
         />
 
@@ -181,7 +140,7 @@ const MenuPage = ({ navigation }: any) => {
           style={[styles.textInput, styles.textArea]}
           placeholder="Enter dish description"
           placeholderTextColor="#666"
-          onChangeText={(newText) => setDishDescription(newText)}
+          onChangeText={setDishDescription}
           value={dishDescription}
           multiline
           numberOfLines={4}
@@ -192,13 +151,25 @@ const MenuPage = ({ navigation }: any) => {
           style={styles.textInput}
           placeholder="Enter dish price"
           placeholderTextColor="#666"
-          onChangeText={(newText) => setDishPrice(newText)}
+          onChangeText={setDishPrice}
           value={dishPrice}
           keyboardType="numeric"
         />
 
         <View style={styles.buttonContainer}>
           <Button title="Add Dish" onPress={handleAddDish} color="#007BFF" />
+        </View>
+
+        <Text style={styles.subHeading}>Current Menu</Text>
+        {dishes.map((dish) => (
+          <View key={dish.id} style={styles.dishItem}>
+            <Text style={styles.dishName}>{dish.dishName}</Text>
+            <Button title="Remove" onPress={() => handleRemoveDish(dish.id)} color="#FF0000" />
+          </View>
+        ))}
+
+        <View style={styles.buttonContainer}>
+          <Button title="Go to Home" onPress={() => navigation.navigate('Home')} color="#007BFF" />
         </View>
       </ScrollView>
     </View>
@@ -250,7 +221,7 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
     padding: 5,
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 10,
@@ -258,46 +229,53 @@ const styles = StyleSheet.create({
   radioGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-evenly',
     width: '100%',
   },
   radioButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 5,
+    marginHorizontal: 15,
   },
   radioLabel: {
-    marginLeft: 3,
-    fontSize: 14,
     color: 'white',
+    fontSize: 16,
+    marginLeft: 5,
   },
   subHeading: {
-    fontSize: 16,
-    paddingVertical: 5,
+    fontSize: 18,
+    fontWeight: 'bold',
     color: 'white',
+    marginBottom: 5,
   },
   textInput: {
     height: 40,
-    borderColor: '#FFFFFF',
+    borderColor: '#007BFF',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-    color: '#333',
     marginBottom: 10,
+    paddingLeft: 10,
+    color: 'white',
+    fontSize: 16,
   },
   textArea: {
-    height: 80,
+    height: 100,
     textAlignVertical: 'top',
   },
   buttonContainer: {
-    marginTop: 5,
-    marginBottom: 15,
-    backgroundColor: '#007BFF',
-    borderRadius: 5,
-    overflow: 'hidden',
+    marginTop: 10,
+  },
+  dishItem: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dishName: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 

@@ -3,9 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  Alert,
   ScrollView,
-  TouchableOpacity,
   Button,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -18,24 +16,8 @@ const HomePage = ({ navigation }: any) => {
     return null;
   }
 
-  const { dishes, removeDish } = context;
+  const { dishes } = context;
   const [selectedCourse, setSelectedCourse] = useState<string>('All');
-
-  const handleRemoveDish = (id: number) => {
-    Alert.alert(
-      'Confirm Removal',
-      'Are you sure you want to remove this dish?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => removeDish(id),
-        },
-      ],
-      { cancelable: true }
-    );
-  };
 
   const filteredDishes =
     selectedCourse === 'All'
@@ -84,7 +66,7 @@ const HomePage = ({ navigation }: any) => {
               <Picker.Item key={course} label={course} value={course} />
             ))}
           </Picker>
-        </View> 
+        </View>
 
         <Button
           title="Add to Menu"
@@ -109,12 +91,6 @@ const HomePage = ({ navigation }: any) => {
             <Text style={styles.dishName}>{dish.dishName}</Text>
             <Text style={styles.dishDescription}>{dish.dishDescription}</Text>
             <Text style={styles.dishPrice}>Price: R{dish.dishPrice}</Text>
-            <TouchableOpacity
-              style={styles.removeButton}
-              onPress={() => handleRemoveDish(dish.id)}
-            >
-              <Text style={styles.removeButtonText}>Remove</Text>
-            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
@@ -227,18 +203,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 5,
     color: '#555',
-  },
-  removeButton: {
-    backgroundColor: '#FF3B30',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  removeButtonText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
   },
 });
 
